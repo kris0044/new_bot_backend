@@ -6,7 +6,23 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const app = express();
-app.use(cors());
+
+const allowedOrigins = [
+  process.env.FRONTEND_URL || 'https://new-bot-frontend.onrender.com',
+  'http://localhost:3000',
+  'https://localhost:3000',
+];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error(`CORS policy does not allow access from ${origin}`));
+    }
+  },
+  credentials: true,
+}));
 app.use(express.json());
 
 // Connect to MongoDB
@@ -34,7 +50,7 @@ app.post('/api/ask-ai', async (req, res) => {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-        'HTTP-Referer': 'http://localhost:3000',
+        'Referer': process.env.FRONTEND_URL || 'https://new-bot-frontend.onrender.com',
         'X-OpenRouter-Title': 'MERN AI Chat App',
         'Content-Type': 'application/json',
       },
